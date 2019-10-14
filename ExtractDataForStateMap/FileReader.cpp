@@ -76,3 +76,100 @@ OneFrameDSVLData* DSVLReader::ReadOneFrameDSVL()
 	return oneFrameDSVLData;
 }
 
+StaticFrameLogReader::StaticFrameLogReader(std::string filename)
+{
+
+	if (filename != "") {
+		FILE *fp;
+		fp = fopen(filename.c_str(), "r");
+		if (fp == NULL) {
+			printf("Error! cannot open static log file.\nPress any key to exit.\n");
+			getchar();
+			exit(-5);
+		}
+		
+		char oneline[200];
+		int startframe, endframe;
+		while (fgets(oneline, 200, fp) != NULL) {
+			if (sscanf(oneline, "%d %d", &startframe, &endframe) == 2) {
+				startFrames.push_back(startframe);
+				endFrames.push_back(endframe);
+			}
+		}
+		fclose(fp);
+	}
+}
+
+
+
+SegAndTransLogReader::SegAndTransLogReader(std::string seglogFileName, std::string translogFileName)
+{
+	//打开文件部分
+	FILE *seglogfp, *translogfp;
+	seglogfp = fopen(seglogFileName.c_str(), "r");
+	if (seglogfp == NULL) {
+		printf("Error! cannot open seg log file.\nPress any key to exit.\n");
+		getchar();
+		exit(-5);
+	}
+	translogfp = fopen(translogFileName.c_str(), "r");
+	if (translogfp == NULL) {
+		printf("Error! cannot open trans log file.\nPress any key to exit.\n");
+		getchar();
+		exit(-5);
+	}
+
+	//读文件部分
+	char oneline[200];
+	int fno, rno,  icx, icy, prid, ptnum, iminx, iminy, imaxx, imaxy;
+	double cx, cy, cz, rng, wid, hei;
+
+	int lastfno = 1;
+
+	std::map<int, SegInfo> SegsInfo;
+	std::map<int, int> dictionary;
+	std::map<int, int>::iterator iter;
+
+	//读trans log，且建立prid和semanticLabel的映射关系
+	
+
+	int semanticLabel;
+	while (fgets(oneline, 200, translogfp) != NULL) {
+		if (sscanf(oneline, "prid=%d,%*d,%*d,%*d,%d", &prid, &semanticLabel) == 2) {
+			std::pair<int, int> pair(prid, semanticLabel);
+			dictionary.insert(pair);
+		}
+	}
+
+	SegInfo tmpSegInfo(-1, -1, -1, -1, -1, -1, false);//由于seg log从frame 1开始，所以为了保证vector的下标正好等于fno，所以最开始填充一个无效数据
+	std::pair<int, SegInfo> tmpair(-1, tmpSegInfo);
+	SegsInfo.insert(tmpair);
+	FramesSegsInfo.push_back(SegsInfo);
+	SegsInfo.clear();
+
+	//读seg log，且查询prid对应的semanticLabel
+	std::cout << "Mapping segmentation ID and semantic label, it may take some time...\n";
+	while (fgets(oneline, 200, seglogfp)!=NULL) {
+		if (sscanf(oneline, "%d,%d,%lf,%lf,%lf,%d,%d,%d,%d,%lf,%d,%d,%d,%d,%lf,%lf", &fno, &rno, &cx, &cy, &cz, &icx, &icy, &prid, &ptnum, &rng, &iminx, &iminy, &imaxx, &imaxy, &wid, &hei) == 16) {
+
+			SegInfo segInfo(prid, iminx, iminy, imaxx, imaxy, 0);//semanticLabel全初始化为0，即unlabeled
+			iter = dictionary.find(prid);
+			if (iter != dictionary.end()) 
+				segInfo.semanticLabel = dictionary[prid];
+
+			if (lastfno != fno) {//如果进入新的一帧，那么就把上一帧的所有Segs给push到vector中，并且上一帧的信息
+				FramesSegsInfo.push_back(SegsInfo);
+				SegsInfo.clear();
+			}
+			SegsInfo.insert(std::make_pair(prid,segInfo));//将此seg插入到当前帧的Segs的map中
+			lastfno = fno;
+		}
+	}
+	std::cout <<"Mapping finished. Continue process.\n ";
+
+	FramesSegsInfo.push_back(SegsInfo);//push最后一帧
+	
+	fclose(seglogfp);
+	fclose(translogfp);
+
+}

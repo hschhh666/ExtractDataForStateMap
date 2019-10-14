@@ -17,3 +17,21 @@ private:
 	std::string fileName;
 	std::ifstream filePointer;
 };
+
+
+class SegAndTransLogReader {
+public:
+	SegAndTransLogReader(std::string seglogFileName, std::string translogFileName);
+	std::vector<std::map<int,SegInfo>> FramesSegsInfo;//以帧为单位保存，每帧内的所有Seg存为一个map，map的key是prid，value就是该prid的信息，比如prid在rangeImage中的位置、语义信息。
+
+};
+
+
+
+class StaticFrameLogReader {
+public:
+	StaticFrameLogReader(std::string filename);
+	std::vector<int> startFrames;
+	std::vector<int> endFrames;
+
+};

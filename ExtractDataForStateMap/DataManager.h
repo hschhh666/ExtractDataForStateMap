@@ -65,6 +65,20 @@ struct OneFrameDSVLData {
 	Point3d shv;
 };
 
+class SegInfo {
+public:
+	int prid;
+	int iminx;
+	int iminy;
+	int imaxx;
+	int imaxy;
+	int semanticLabel;
+	bool valid;
+
+	SegInfo() {};
+	SegInfo(int p, int nx, int ny, int xx, int xy, int s, bool v = true):prid(p),iminx(nx),iminy(ny),imaxx(xx),imaxy(xy),semanticLabel(s),valid(v){};
+};
+
 ////点的容器，用来保存每帧根据语义信息分类后的点
 //struct PointsContainer {
 //	Point3fi  points[BLOCK_PER_FRAME*LINES_PER_BLOCK*LINES];
@@ -100,3 +114,4 @@ public:
 	double leftUpCornerX, leftUpCornerY;//图像左上角对应的真实世界中的全局坐标
 	cv::Mat map;//保存着地图
 };
+

@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="CalcPlane.cpp" />
     <ClCompile Include="CoordinateTransfer.cpp" />
+    <ClCompile Include="DataClipper.cpp" />
     <ClCompile Include="DataManager.cpp" />
     <ClCompile Include="ExtractDataForStateMap.cpp" />
     <ClCompile Include="FileReader.cpp" />
@@ -167,6 +168,7 @@
   <ItemGroup>
     <ClInclude Include="CalcPlane.h" />
     <ClInclude Include="CoordinateTransfer.h" />
+    <ClInclude Include="DataClipper.h" />
     <ClInclude Include="DataManager.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="FileReader.h" />

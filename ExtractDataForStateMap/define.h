@@ -10,3 +10,4 @@
 #include "FileReader.h"
 #include "VisulisationAndTools.h"
 #include "OccupiedGridMapBuilder.h"
+#include "DataClipper.h"
