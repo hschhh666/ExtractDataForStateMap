@@ -2,9 +2,13 @@
 
 
 
-StateMapBuilder::StateMapBuilder(std::string p40calibFile, std::vector<std::map<int, SegInfo>> FramesSegsInfo, std::string videoFile)
+StateMapBuilder::StateMapBuilder(std::string p40calibFile, std::vector<std::map<int, SegInfo>> FramesSegsInfo, std::vector<int> StartFrames, std::vector<int> EndFrames,std::string YmlName,std::string videoFile)
 {
+	curDataSeg = 0;
 	framesSegsInfo = FramesSegsInfo;
+	startFrames = StartFrames;
+	endFrames = EndFrames;
+	ymlName = YmlName;
 	PointsForStateMap = new Point3fi[LINES*LINES_PER_BLOCK*BLOCK_PER_FRAME];
 	
 	Point3d rot;//激光雷达到GPS的外参标定参数 rotate
@@ -47,6 +51,9 @@ StateMapBuilder::StateMapBuilder(std::string p40calibFile, std::vector<std::map<
 
 void StateMapBuilder::BuildStateMap(OneFrameDSVLData * frame)
 {
+	if (endFrames.at(endFrames.size() - 1) < frame->curFrame) return;
+
+
 	oneFrameData = frame;
 
 	Point3d rotG;//转换到全局坐标
@@ -54,9 +61,10 @@ void StateMapBuilder::BuildStateMap(OneFrameDSVLData * frame)
 	rotG.x = oneFrameData->ang.x; rotG.y = oneFrameData->ang.y; rotG.z = oneFrameData->ang.z;
 	createRotMatrix_ZYX(Rot2Global, rotG.x, rotG.y, -rotG.z);//创建旋转到全局坐标下的旋转矩阵
 
-	if (oneFrameData->curFrame == 0) {
+	if (oneFrameData->curFrame == startFrames.at(curDataSeg)) {
 		mapContainer.leftUpCornerX = shvG.x - mapContainer.mapSize / 2;//取第一帧位置作为地图的基准坐标
 		mapContainer.leftUpCornerY = shvG.y + mapContainer.mapSize / 2;
+		mapContainer.InitMap();
 	}
 
 	//GetPlaneEquation();//计算地面方程
@@ -135,8 +143,8 @@ void StateMapBuilder::DoBuildingStateMap()
 			Point3d dirVector;
 			dirVector.x = pc.x - pl.x;
 			dirVector.y = pc.y - pl.y;
-			dirVector.z = pc.z = pl.z;
-			double moveDis = sqrt(dirVector.x*dirVector.x + dirVector.y*dirVector.y + dirVector.z*dirVector.z);
+			dirVector.z = pc.z - pl.z;
+			double moveDis = sqrt(dirVector.x*dirVector.x + dirVector.y*dirVector.y);
 			double theta = acos(dirVector.x / moveDis) * 180 / CV_PI;
 			if (dirVector.y < 0) theta = 360 - theta;
 			theta += 22.5;
@@ -175,6 +183,48 @@ void StateMapBuilder::DoBuildingStateMap()
 			}
 		}
 	}
+
+	//ShowStateMap(0);
+	//ShowStateMap(2);
+
+	
+	if (curFrame == endFrames.at(curDataSeg)) {
+		//输出到yaml文件
+		int x, y;
+		double mapSize = 100;//meter 这里指地图的实际大小是多少米,保存以车辆为中心的mapSize x mapSize 平方米大小的地图
+		int imgSize = mapSize / mapContainer.pixelSize;//pixel 这里指在地图尺寸为mapSize米时对应的真实地图像素大小
+		if (mapContainer.CoordinateConventer(shvG.x, shvG.y, x, y)) {
+			x = x - imgSize / 2;
+			y = y - imgSize / 2;
+			if (x < 0) x = 0;
+			if (y < 0)y = 0;
+			if (x + imgSize > mapContainer.imgSize) x = mapContainer.imgSize - imgSize - 1;
+			if (y + imgSize > mapContainer.imgSize) y = mapContainer.imgSize - imgSize - 1;
+			cv::Rect rect(x, y, imgSize, imgSize);
+			double shvGx, shvGy;
+			mapContainer.CoordinateConventer(x, y, shvGx, shvGy);
+			cv::Mat img = mapContainer.StateMap(rect);
+			std::string filename = ymlName + "_part" + std::to_string(curDataSeg) + ".yml";
+			cv::FileStorage fs(filename, cv::FileStorage::WRITE);
+			fs << "leftUpCornerX" << shvGx;
+			fs << "leftUpCornerY" << shvGy;
+			fs << "pixelSize" << mapContainer.pixelSize;
+			fs << "imgSize" << imgSize;
+			fs << "channelNum" << 10;
+			fs << "startFrame" << startFrames.at(curDataSeg);
+			fs << "endFrame" << endFrames.at(curDataSeg);
+			fs << "framesNum" << endFrames.at(curDataSeg) - startFrames.at(curDataSeg) + 1;
+			fs << "img" << img.reshape(1);
+			fs.release();
+			std::cout << "Out put yaml file to " << filename << std::endl;
+		}
+
+
+		//重新初始化地图
+		mapContainer.InitMap();
+		curDataSeg++;
+	}
+
 }
 
 StateMapBuilder::~StateMapBuilder()
@@ -215,8 +265,12 @@ void StateMapBuilder::GetPlaneEquation()
 
 
 
-void StateMapBuilder::ShowStateMap()
+void StateMapBuilder::ShowStateMap(int channel)
 {
+
+	static cv::Mat channels[10];
+	cv::split(mapContainer.StateMap, channels);
+
 	int x, y;
 	double mapSize = 100;//meter 这里指地图的实际大小是多少米
 	int finalImgSize = 600;//pixel 这里指最终可视化出来的地图是多少像素
@@ -228,11 +282,13 @@ void StateMapBuilder::ShowStateMap()
 		if (y < 0)y = 0;
 		if (x + imgSize > mapContainer.imgSize) x = mapContainer.imgSize - imgSize - 1;
 		if (y + imgSize > mapContainer.imgSize) y = mapContainer.imgSize - imgSize - 1;
-		cv::Mat img = mapContainer.OGM(cv::Rect(x, y, imgSize, imgSize));
+		cv::Mat img = channels[channel](cv::Rect(x, y, imgSize, imgSize));
 		cv::resize(img, img, cv::Size(finalImgSize, finalImgSize));
-		cv::imshow("state map", img);
+		cv::imshow("state map channel " + std::to_string(channel), img);
 		cv::waitKey(1);
-		video.write(img);
+
+		if(video.isOpened())
+			video.write(img);
 	}
 }
 

@@ -31,7 +31,7 @@ public:
 
 class StaticFrameLogReader {
 public:
-	StaticFrameLogReader(std::string filename);
+	StaticFrameLogReader(std::string filename,int maxFrames = 600);//600帧约等于一分钟
 	std::vector<int> startFrames;
 	std::vector<int> endFrames;
 

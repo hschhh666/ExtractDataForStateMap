@@ -17,7 +17,7 @@ int main(int argc,char **argv)
 		return(-2);
 	}
 
-	std::string dsvlFileName = "", seglogFileName = "", translogFileName = "", staticlogFileName = "", p40calibFileName = "",ogmFileName = "";
+	std::string dsvlFileName = "", seglogFileName = "", translogFileName = "", staticlogFileName = "", ymlName = "",p40calibFileName = "",ogmFileName = "";
 
 	if (!configfile.getValue("param", "dsvl", dsvlFileName)) {
 		printf("Error! Cannot get parameter dsvl in config file.\nPress any key to exit.\n");
@@ -37,6 +37,11 @@ int main(int argc,char **argv)
 	if (!configfile.getValue("param", "staticlog", staticlogFileName)) {
 		printf("No static log file, so process all frames, else only process static frames.\n");
 	}
+	if (!configfile.getValue("param", "yml", ymlName)) {
+		printf("Error! No yaml file path!");
+		getchar();
+		return (-3);
+	}
 	if(!configfile.getValue("param", "p40calib", p40calibFileName)) {
 		printf("Error! Cannot get parameter p40calib in config file.\nPress any key to exit.\n");
 		getchar();
@@ -51,7 +56,7 @@ int main(int argc,char **argv)
 	DSVLReader dsvlFile(dsvlFileName);
 	StaticFrameLogReader staticFrameLog(staticlogFileName);
 	SegAndTransLogReader segAndTransLog(seglogFileName, translogFileName);
-	StateMapBuilder stateMapBuilder(p40calibFileName, segAndTransLog.FramesSegsInfo);
+	StateMapBuilder stateMapBuilder(p40calibFileName, segAndTransLog.FramesSegsInfo,staticFrameLog.startFrames,staticFrameLog.endFrames,ymlName);
 
 	//OGMBuilder ogm(p40calibFileName, ogmFileName);
 	//DataClipper dataclipper(staticlogFileName,dsvlFile.frameNum);//输出分割后的数据log
@@ -60,6 +65,11 @@ int main(int argc,char **argv)
 
 	int curFrame = 0;
 
+
+	if (staticFrameLog.startFrames.size() == 0) {
+		printf("There is no static data in this file. program exit.\n");
+		return 1;
+	}
 	for (oneFrameDSVData = dsvlFile.ReadOneFrameDSVL(); oneFrameDSVData != nullptr; oneFrameDSVData = dsvlFile.ReadOneFrameDSVL()) {
 		curFrame = oneFrameDSVData->curFrame;
 		//ShowRangeImage(oneFrameDSVData);

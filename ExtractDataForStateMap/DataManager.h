@@ -89,6 +89,7 @@ public:
 class MapContainer {
 public:
 	MapContainer();//地图数据结构的默认构造函数，在这里初始化地图
+	void InitMap();//初始化地图
 	bool CoordinateConventer(double, double, int&, int&);//全局坐标与图像坐标的转换，若输入的全局坐标点出现在该地图中则返回true，否则返回false
 	bool CoordinateConventer(int, int, double&, double&);//全局坐标与图像坐标的转换，若输入的图像坐标在该图像范围内则返回true，否则返回false；
 	void ShowMap(int key,std::string imgname);//地图可视化

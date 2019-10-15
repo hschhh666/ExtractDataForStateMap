@@ -79,7 +79,7 @@ OneFrameDSVLData* DSVLReader::ReadOneFrameDSVL()
 	return oneFrameDSVLData;
 }
 
-StaticFrameLogReader::StaticFrameLogReader(std::string filename)
+StaticFrameLogReader::StaticFrameLogReader(std::string filename, int maxFrames)
 {
 
 	if (filename != "") {
@@ -95,8 +95,17 @@ StaticFrameLogReader::StaticFrameLogReader(std::string filename)
 		int startframe, endframe;
 		while (fgets(oneline, 200, fp) != NULL) {
 			if (sscanf(oneline, "%d %d", &startframe, &endframe) == 2) {
-				startFrames.push_back(startframe);
-				endFrames.push_back(endframe);
+				while (endframe - startframe + 1 >= maxFrames) {
+					startFrames.push_back(startframe);
+					endFrames.push_back(startframe + maxFrames - 1);
+					startframe += maxFrames;
+				}
+
+				if (endframe - startframe >= 1) {
+					startFrames.push_back(startframe);
+					endFrames.push_back(endframe);
+				}
+
 			}
 		}
 		fclose(fp);
