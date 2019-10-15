@@ -42,6 +42,9 @@
     <ClCompile Include="DataClipper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="StateMapBuilder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inifile.h">
@@ -72,6 +75,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="DataClipper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="StateMapBuilder.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

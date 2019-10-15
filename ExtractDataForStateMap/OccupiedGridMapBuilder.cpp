@@ -5,7 +5,8 @@ OGMBuilder::OGMBuilder(std::string p40calibFile, std::string videoFile)
 {
 	PointsForOGM = new Point3fi[LINES*LINES_PER_BLOCK*BLOCK_PER_FRAME];
 	fno = 0;
-
+	
+	Point3d rot;//激光雷达到GPS的外参标定参数 rotate
 	//加载外参标定文件
 	std::ifstream filePoint;
 	char buff[200];
@@ -46,14 +47,10 @@ OGMBuilder::OGMBuilder(std::string p40calibFile, std::string videoFile)
 //构建占有栅格地图的主函数。首先计算地平面方程，然后根据点到地面的高度和点的标签挑选用于构建占有栅格地图的点，最后构建占有栅格地图。
 void OGMBuilder::BuildOGM(OneFrameDSVLData * frame)
 {
-
 	oneFrameData = frame;
-	shvG.x = oneFrameData->shv.x;
-	shvG.y = oneFrameData->shv.y;
-	shvG.z = oneFrameData->shv.z;
-	rotG.x = oneFrameData->ang.x;
-	rotG.y = oneFrameData->ang.y;
-	rotG.z = oneFrameData->ang.z;
+	Point3d  rotG;//转换到全局坐标	
+	shvG.x = oneFrameData->shv.x; shvG.y = oneFrameData->shv.y; shvG.z = oneFrameData->shv.z;
+	rotG.x = oneFrameData->ang.x; rotG.y = oneFrameData->ang.y; rotG.z = oneFrameData->ang.z;
 	createRotMatrix_ZYX(Rot2Global, rotG.x, rotG.y, -rotG.z);//创建旋转到全局坐标下的旋转矩阵
 	
 	if (fno == 0) {
@@ -109,15 +106,15 @@ void OGMBuilder::DoBuildingOGM()
 		shiftPoint3d(p, shvG);//将局部坐标转换到全局坐标
 		uchar prob;
 		if (mapContainer.CoordinateConventer(p.x, p.y, x, y)) {
-			prob = mapContainer.map.at<cv::Vec3b>(cv::Point(x, y))[0];
+			prob = mapContainer.OGM.at<cv::Vec3b>(cv::Point(x, y))[0];
 			if (prob < 255)
 			{
 				prob++;
-				mapContainer.map.at<cv::Vec3b>(cv::Point(x, y)) = { prob,prob,prob };
+				mapContainer.OGM.at<cv::Vec3b>(cv::Point(x, y)) = { prob,prob,prob };
 			}
 				
 			else
-				mapContainer.map.at<cv::Vec3b>(cv::Point(x, y)) = { 255,255,255 };
+				mapContainer.OGM.at<cv::Vec3b>(cv::Point(x, y)) = { 255,255,255 };
 		}
 	}
 	ShowOGM();
@@ -140,7 +137,7 @@ void OGMBuilder::ShowOGM()
 		if (y < 0)y = 0;
 		if (x + imgSize > mapContainer.imgSize) x = mapContainer.imgSize - imgSize - 1;
 		if (y + imgSize > mapContainer.imgSize) y = mapContainer.imgSize - imgSize - 1;
-		cv::Mat img = mapContainer.map(cv::Rect(x,y, imgSize, imgSize));
+		cv::Mat img = mapContainer.OGM(cv::Rect(x,y, imgSize, imgSize));
 		cv::resize(img, img, cv::Size(finalImgSize, finalImgSize));
 		cv::imshow("OGM", img);
 		cv::waitKey(1);

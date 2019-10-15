@@ -2,7 +2,7 @@
 #pragma once
 #include "define.h"
 
-class OGMBuilder {
+class OGMBuilder {//写这个函数只是为了测试nav等数据是否正确
 public:
 	OGMBuilder(std::string p40calibFile, std::string videoFile = "");
 	void BuildOGM(OneFrameDSVLData * frame);//构建OGM地图
@@ -25,10 +25,8 @@ private:
 	int fno;//frame number
 
 	Point3d shv;//激光雷达到GPS的外参标定参数 shift
-	Point3d rot;//激光雷达到GPS的外参标定参数 rotate
-	MATRIX	RotLidar2GPS;
-	Point3d shvG;//转换到全局坐标
-	Point3d rotG;//转换到全局坐标
+	Point3d shvG;//GPS到全局位置的外参标定参数 shift
+	MATRIX	RotLidar2GPS;//雷达到GPS的旋转矩阵
 	MATRIX Rot2Global;//转换到全局坐标的旋转矩阵
 
 	cv::VideoWriter video;

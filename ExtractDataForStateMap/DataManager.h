@@ -63,44 +63,28 @@ struct OneFrameDSVLData {
 	OneBlockDSVLData oneBlockDsvData[BLOCK_PER_FRAME];
 	Point3d ang;
 	Point3d shv;
+	int curFrame;//当前是第几帧，从0开始计
+	int totalframes;//该帧所在文件所含的总帧数，若为1则表明文件总共1帧
 };
 
 class SegInfo {
 public:
-	int prid;
-	int iminx;
-	int iminy;
-	int imaxx;
-	int imaxy;
-	int semanticLabel;
-	bool valid;
+	int prid;//seg的序列编号
+	int iminx;//seg在rangeimage中的位置
+	int iminy;//seg在rangeimage中的位置
+	int imaxx;//seg在rangeimage中的位置
+	int imaxy;//seg在rangeimage中的位置
+	int semanticLabel;//seg的语义标签
+	bool valid;//seg的所有信息是否都可用（特指cx/cy/cz)，如果都可用才为true。初始化为false
+	double cx;//seg在point cloud中的中心位置（seg的平均点云位置）
+	double cy;//seg在point cloud中的中心位置（seg的平均点云位置）
+	double cz;//seg在point cloud中的中心位置（seg的平均点云位置）
+	int segNum;//seg的点数
 
 	SegInfo() {};
-	SegInfo(int p, int nx, int ny, int xx, int xy, int s, bool v = true):prid(p),iminx(nx),iminy(ny),imaxx(xx),imaxy(xy),semanticLabel(s),valid(v){};
+	SegInfo(int p, int nx, int ny, int xx, int xy, int s, bool v = false) :prid(p), iminx(nx), iminy(ny), imaxx(xx), imaxy(xy), semanticLabel(s), valid(v) { cx = cy = cz = 0; segNum = 0; };
 };
 
-////点的容器，用来保存每帧根据语义信息分类后的点
-//struct PointsContainer {
-//	Point3fi  points[BLOCK_PER_FRAME*LINES_PER_BLOCK*LINES];
-//	int sequenceNum[BLOCK_PER_FRAME*LINES_PER_BLOCK*LINES];//序列的编号，0表示地面、无效点等，>10000才表示有效序列
-//	int labels[BLOCK_PER_FRAME*LINES_PER_BLOCK*LINES];//注意，此处labels的定义和dsvl中的不一样，此处的labels指的是语义信息，如人、车、地面等
-//	Point3d ang;
-//	Point3d shv;
-//};
-//
-//
-////根据语义信息，对每帧的点进行分类。
-//class PointsClassifyer {
-//public:
-//	PointsClassifyer(std::string logFile);//读取trans.log文件，并记录序列和类别的映射关系
-//	void DoClassify(OneFrameDSVLData *frame);
-//	void ClearClassifyer();
-//	PointsContainer * oneFrameData;
-//private:
-//	std::map<int, int> dictionary;//保存着序列和类别的映射关系
-//
-//};
-//
 //地图的数据结构
 class MapContainer {
 public:
@@ -112,6 +96,7 @@ public:
 	double mapSize = 600;//meter 地图对应的实际物理环境大小
 	double pixelSize = 0.2;//meter 每个像素对应的实际物理尺寸
 	double leftUpCornerX, leftUpCornerY;//图像左上角对应的真实世界中的全局坐标
-	cv::Mat map;//保存着地图
+	cv::Mat OGM;//保存着占有栅格地图
+	cv::Mat StateMap;//保存着状态地图
 };
 

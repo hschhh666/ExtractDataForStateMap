@@ -51,21 +51,25 @@ int main(int argc,char **argv)
 	DSVLReader dsvlFile(dsvlFileName);
 	StaticFrameLogReader staticFrameLog(staticlogFileName);
 	SegAndTransLogReader segAndTransLog(seglogFileName, translogFileName);
+	StateMapBuilder stateMapBuilder(p40calibFileName, segAndTransLog.FramesSegsInfo);
 
 	//OGMBuilder ogm(p40calibFileName, ogmFileName);
 	//DataClipper dataclipper(staticlogFileName,dsvlFile.frameNum);//输出分割后的数据log
 	OneFrameDSVLData * oneFrameDSVData;
 
 
-	int counter = 0;
+	int curFrame = 0;
 
 	for (oneFrameDSVData = dsvlFile.ReadOneFrameDSVL(); oneFrameDSVData != nullptr; oneFrameDSVData = dsvlFile.ReadOneFrameDSVL()) {
+		curFrame = oneFrameDSVData->curFrame;
 		//ShowRangeImage(oneFrameDSVData);
-		ShowRangeImageWithSemantic(oneFrameDSVData, &segAndTransLog.FramesSegsInfo.at(counter));
+		ShowRangeImageWithSemantic(oneFrameDSVData, &segAndTransLog.FramesSegsInfo.at(curFrame));
+
+
+		stateMapBuilder.BuildStateMap(oneFrameDSVData);
 		//ogm.BuildOGM(oneFrameDSVData);
-		if (counter % 100 == 0)
-			printf("Frame %d/%d\n", counter,(int)dsvlFile.frameNum-1);
-		counter++;
+		if (curFrame % 100 == 0)
+			printf("Frame %d/%d\n", curFrame,(int)dsvlFile.totalframes-1);
 	}
 
 	return 0;

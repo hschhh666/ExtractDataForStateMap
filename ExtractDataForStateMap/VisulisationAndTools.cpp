@@ -54,19 +54,13 @@ void ShowRangeImageWithSemantic(OneFrameDSVLData * frame, std::map<int,SegInfo> 
 				if (mapiter != (*SegsInfo).end()) {
 					int label = (*SegsInfo)[curprid].semanticLabel;//取出该点的语义信息
 					if (label == CAR) {
-						rangeImage.at<cv::Vec3b>(y, x)[0] = 255;
-						rangeImage.at<cv::Vec3b>(y, x)[1] = 0;
-						rangeImage.at<cv::Vec3b>(y, x)[2] = 0;
+						rangeImage.at<cv::Vec3b>(y, x) = { 255,0,0 };
 					}
 					else if (label == PERSION) {
-						rangeImage.at<cv::Vec3b>(y, x)[0] = 0;
-						rangeImage.at<cv::Vec3b>(y, x)[1] = 255;
-						rangeImage.at<cv::Vec3b>(y, x)[2] = 0;
+						rangeImage.at<cv::Vec3b>(y, x) = { 0,255,0 };
 					}
 					else if (label == RIDER) {
-						rangeImage.at<cv::Vec3b>(y, x)[0] = 0;
-						rangeImage.at<cv::Vec3b>(y, x)[1] = 0;
-						rangeImage.at<cv::Vec3b>(y, x)[2] = 255;
+						rangeImage.at<cv::Vec3b>(y, x) = { 0,0,255 };
 					}
 				}
 			}
@@ -80,7 +74,7 @@ void ShowRangeImageWithSemantic(OneFrameDSVLData * frame, std::map<int,SegInfo> 
 
 
 
-//画点云，注意坐标的定义
+//画投影到地面上的点云，注意坐标的定义
 void ShowPointCloud(Point3fi * frame, int num, std::string windowname)
 {
 	double realSize = 80;//meter

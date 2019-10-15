@@ -14,8 +14,8 @@ DSVLReader::DSVLReader(std::string file)
 		fileLens = filePointer.tellg();//返回文件指针所在的位置(字节数），检查文件大小
 		printf("Open DSVL file succeed! File size = %f GB, %f KB.  ", fileLens / 1024 / 1024 / 1024.0, fileLens/1024.0);
 		filePointer.seekg(0, std::ios_base::beg);//将文件指针置于文件开始
-		frameNum = (double)fileLens / (double)sizeof(OneBlockDSVLData) / (double)BLOCK_PER_FRAME;
-		printf("Total frames = %f \n", frameNum);//根据激光帧数是否为整数判断文件是否损坏/有效
+		totalframes = (double)fileLens / (double)sizeof(OneBlockDSVLData) / (double)BLOCK_PER_FRAME;
+		printf("Total frames = %f \n", totalframes);//根据激光帧数是否为整数判断文件是否损坏/有效
 		if (( fileLens % (sizeof(OneBlockDSVLData) * BLOCK_PER_FRAME))) {
 			printf("Warning!!! DSVL file maybe broken!!! Program will still run, but there may be some errors. Press any key to continue.\n");
 			getchar();
@@ -73,6 +73,9 @@ OneFrameDSVLData* DSVLReader::ReadOneFrameDSVL()
 	oneFrameDSVLData->shv.y /= BLOCK_PER_FRAME;
 	oneFrameDSVLData->shv.z /= BLOCK_PER_FRAME;
 
+	oneFrameDSVLData->totalframes = totalframes;
+	oneFrameDSVLData->curFrame = curFrame;
+	curFrame++;
 	return oneFrameDSVLData;
 }
 

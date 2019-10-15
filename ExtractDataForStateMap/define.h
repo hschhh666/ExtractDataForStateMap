@@ -11,3 +11,4 @@
 #include "VisulisationAndTools.h"
 #include "OccupiedGridMapBuilder.h"
 #include "DataClipper.h"
+#include "StateMapBuilder.h"

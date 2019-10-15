@@ -163,6 +163,7 @@
     <ClCompile Include="FileReader.cpp" />
     <ClCompile Include="inifile.cpp" />
     <ClCompile Include="OccupiedGridMapBuilder.cpp" />
+    <ClCompile Include="StateMapBuilder.cpp" />
     <ClCompile Include="VisulisationAndTools.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +176,7 @@
     <ClInclude Include="inifile.h" />
     <ClInclude Include="OccupiedGridMapBuilder.h" />
     <ClInclude Include="opencvHeader.h" />
+    <ClInclude Include="StateMapBuilder.h" />
     <ClInclude Include="VisulisationAndTools.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

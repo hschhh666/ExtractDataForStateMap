@@ -10,12 +10,13 @@ public:
 	~DSVLReader();
 	void CloseFile();
 	OneFrameDSVLData* ReadOneFrameDSVL();//读取一帧数据
-	double frameNum;
+	double totalframes;//该帧所在文件所含的总帧数，若为1则表明文件总共1帧
 private:
 	OneFrameDSVLData *oneFrameDSVLData;//读到的一帧数据就保存在这里
 	long long  fileLens;
 	std::string fileName;
 	std::ifstream filePointer;
+	int curFrame;//当前是第几帧，从0开始计
 };
 
 
